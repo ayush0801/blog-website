@@ -69,7 +69,7 @@ module.exports.update_post = async (req, res) => {
      }
      thingsToUpdate.title = title;
      thingsToUpdate.body = body;
-     thingsToUpdate.tags = tags; // Use $set to update the entire tags array
+     thingsToUpdate.tags = tags;
    } else if (title) {
      if (title.length < 3) {
        return res.status(422).json({ error: "Title should be at least 3 characters" });
