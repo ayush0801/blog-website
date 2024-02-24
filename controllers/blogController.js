@@ -1,6 +1,7 @@
 const blogModel = require('../models/BlogModel');
 const isEmailValid = require('../utils/validation');
 require('../db');
+const authRoutes = require('../router/authRoute');
 
 // GET all Posts with optional search
 module.exports.all_posts_get = async (req, res) => {

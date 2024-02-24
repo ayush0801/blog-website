@@ -1,21 +1,21 @@
-const {isEmailValid} = require('../utils/validation');
 const userModel = require('../models/UserModel');
-const bcrypt =  require("bcrypt");
-require('../db');
+const {isEmailValid} = require('../utils/validation');
+const bcrypt = require('bcrypt');
+require('../db')
 require('dotenv').config();
-const SECRET_TOKEN = process.env;
+const {SECRET_TOKEN} = process.env;
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser')
 
 
 
-module.exports.signup_get = (req, res) => {
-   res.render('signup');
-}
+// module.exports.signup_get = (req, res) => {
+//    res.render('signup');
+// }
 
-module.exports.login_get = (req, res) => {
-   res.render('signup');
-}
+// module.exports.login_get = (req, res) => {
+//    res.render('signup');
+// }
 
 
 module.exports.signup_post = async(req, res) => {
