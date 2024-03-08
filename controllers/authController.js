@@ -35,6 +35,15 @@ const sendVerificationEmail = async (email) => {
    );
 };
 
+const sendConformationEmail = (email) => {
+   mailSender(
+      email,
+      "Confirmation Email",
+      `<h1>Your Email has been successfully verified</h1>
+      <p>You can now login into our system.</p>`
+   );
+};
+
 // Function to verify OTP
 const verifyOTP = async (email, otp) => {
    const otpSchema = require("../models/otpModel");
@@ -56,7 +65,7 @@ const verifyOTP = async (email, otp) => {
       if (otpDoc) {
          await otpDoc.remove(); // Remove the used OTP document if it exists
       }
-      
+
       return true; // OTP verified successfully
    } catch (error) {
       console.error(error);
@@ -115,6 +124,7 @@ module.exports.signup_post = async (req, res) => {
    const otpVerified = await verifyOTP(email, otp);
 
    if (otpVerified) {
+      await sendConformationEmail(email);
       res.status(200).json({ message: "Account Verified Successfully" });
    } else {
       res.status(400).json({ message: "An error occurred during verification! Please try again later." });
