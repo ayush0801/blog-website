@@ -44,6 +44,8 @@ const sendConformationEmail = (email) => {
    );
 };
 
+
+
 // Function to verify OTP
 const verifyOTP = async (email, otp) => {
    const otpSchema = require("../models/otpModel");
@@ -174,6 +176,90 @@ module.exports.login_post = async (req, res) => {
       res.status(400).json({ error: err });
    }
 };
+
+module.exports.forgot_password = async (req, res) => {
+   const {email} = req.body;
+   if (!email) {
+      res.status(422).json({ err: 'Please enter email ID' });
+   }
+   if (!isEmailValid(email)) {
+      res.status(400).json({ message: 'Invalid Email' });
+   }
+
+   try {
+      const existingUser = await userModel.findOne({email});
+      if(!existingUser){
+         res.status(404).json({message: 'No User Found'});
+      }else{
+         const length = 6;
+         const buffer = crypto.randomBytes(length);
+         const rndno = buffer.toString("hex").slice(0, length).toUpperCase();
+         const timestamp = Date.now(); // Current timestamp in milliseconds
+         const expiryTime = timestamp + (10 * 60 * 1000); // 10 minutes in milliseconds
+         // const resetLink = `http://localhost:3000/reset?email=${email}&hash=${rndno}&timestamp=${expiryTime}`;
+         const resetLink = `http://localhost:3000/reset-password?email=${email}&hash=${rndno}`;
+
+
+
+         existingUser.resetHash = rndno;
+         await existingUser.save();
+         mailSender(
+            email,
+            "Reset Passoword Request",
+            `<h1>Hi, your request for password reset has been raised.</h1>
+            <p>Kindly click on the link to proceed further: ${resetLink}</p>`
+         );
+         res.status(200).json({message:'Reset password link sent!'});
+
+      }
+   } catch (err) {
+      res.status(400).json({error: err});
+   }
+}
+
+module.exports.reset_password = async(req, res) => {
+   const {email, hash} = req.query;
+   console.log(email);
+   console.log(hash);
+   // console.log(timestamp);
+   const {password, confirmpassword} = req.body;
+   if(!email || !hash) return res.status(400).json({error: 'Invalid input parameters'});
+   if (!password || !confirmpassword) {
+      return res.status(400).json({ error: 'Please provide both password and confirm password' });
+   }
+
+   // const linkExpiryTime = parseInt(timestamp, 10) + (10 * 60 * 1000); // 10 minutes in milliseconds
+   //  if (Date.now() > linkExpiryTime) {
+   //      return res.status(400).json({ error: 'Reset link has expired' });
+   //  }
+   
+   if (password !== confirmpassword) {
+      return res.status(400).json({ error: 'Password and confirm password do not match' });
+   }
+   try{
+      existingUser = await userModel.findOne({email});
+      if(!existingUser){
+         res.status(400).json({error:  'User not found'})
+      }
+      if (!existingUser.resetHash || existingUser.resetHash !== hash) {
+         return res.status(400).json({ error: 'Invalid reset hash' });
+      }
+
+      const hashedPassword = bcrypt.hashSync(password, 12);
+      
+
+      await userModel.findOneAndUpdate({email}, {password: hashedPassword});
+
+      await userModel.findOneAndUpdate({ email }, { resetHash: null });
+
+      return res.status(200).json({ message: 'Password reset successful' });
+   }
+   catch(err) {
+      console.log(err);
+      res.status(400).json({error: err});
+   }
+
+}
 
 
 module.exports.logout_get = (req, res) => {
