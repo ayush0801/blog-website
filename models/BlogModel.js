@@ -1,6 +1,44 @@
 const mongoose = require('mongoose');
 require('../db');
 
+const commentSchema = new mongoose.Schema({
+   content: {
+      type: String,
+      required: [true, "Body is requried"],
+      minlength: [10, "The comment should be minimum 10 characters long"]
+   },
+   user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'user',
+      required:  true
+   },
+   likes: {
+      type:  [mongoose.Schema.Types.ObjectId],
+      default:  []
+   },
+   replies: [{
+      user: {
+         type: mongoose.Schema.Types.ObjectId,
+         ref: 'user',
+         required: true
+      },
+      content: {
+         type: String,
+         required: [true, "Body is requried"],
+         minlength: [10, "The comment should be minimum 10 characters long"]         
+      },
+      
+      date: {
+         type: Date,
+         default: Date.now()
+      }
+   }],
+   date: {
+      type: Date,
+      default: Date.now()
+   }
+});
+
 const postSchema = new mongoose.Schema({
    title: {
       type: String,
@@ -18,9 +56,12 @@ const postSchema = new mongoose.Schema({
    },
    tags: {
       type: [String]
-   }
+   },
+   comments: [commentSchema]
 
-})
+});
+
+
 
 
 const postModel = mongoose.model('Blog', postSchema);

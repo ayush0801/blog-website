@@ -23,27 +23,38 @@ module.exports.all_posts_get = async (req, res) => {
 
 
 //GET a particular Post
-module.exports.get_particular_blog_get =  (req,res) => {
+module.exports.get_particular_blog_get =  async (req,res) => {
    const blogID = req.params.id;
-   blogModel.findOne({_id: blogID})
-   .then((data) => {
-      res.status(200).json({blog: data});
-
-   })
-   .catch((err) => {
-      return res.status(401).json({error: err.message});
-
-   })
+   try {
+    const blog = await blogModel.findById(blogID)
+       .populate({
+          path: 'comments',
+          populate: {
+             path: 'replies',
+             populate: {
+                path: 'user', // Assuming you want to populate the user field in replies
+                select: 'username' // Select specific fields of the user
+             }
+          }
+       });
+    if (!blog) {
+       return res.status(404).json({ error: 'Blog not found' });
+    }
+    res.status(200).json({ blog });
+ } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
+ }
 }
 
 //Create a Post
 module.exports.add_blog_post = async(req, res) => {
-   const {title, body, tags} = req.body
+   const {title, body, date, tags, comments} = req.body
    if(!title || !body){
       res.status(403).json( {"Error": "Please fill out all fields."} );
    }
    try{
-      const blog = new blogModel({title, body, tags});
+      const blog = new blogModel({title, body, date, tags, comments});
       await blog.save();
       res.status(201).json({message:  'Post added successfully with ID:' + blog._id});
    }
